@@ -7,37 +7,38 @@
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Helvetica Neue', sans-serif;
             margin: 0;
             padding: 0;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-color: #f0f0f0;
+            background-color: #f4f4f4;
         }
         svg {
             background-color: #ffffff;
-            border: 2px solid #333;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            border: 2px solid #ccc;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
         }
         .node circle {
             stroke: #333;
-            stroke-width: 2px;
+            stroke-width: 1.5px;
         }
         .node text {
             font-size: 14px;
-            font-weight: bold;
+            font-weight: 600;
+            fill: #555;
         }
         #tooltip {
             position: absolute;
             text-align: center;
-            width: auto;
+            width: 200px;
             padding: 8px;
             font: 12px sans-serif;
-            background: lightsteelblue;
-            border: 0px;
-            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            border-radius: 4px;
             pointer-events: none;
             display: none;
         }
@@ -47,16 +48,16 @@
 
 <div id="tooltip"></div>
 
-<svg width="600" height="400"></svg>
+<svg width="800" height="600"></svg>
 
 <script>
-    const width = 600;
-    const height = 400;
+    const width = 800;
+    const height = 600;
 
     const nodes = [
-        { id: "Primo Principio", color: "#ff6666" },
-        { id: "Secondo Principio", color: "#66b3ff" },
-        { id: "Terzo Principio", color: "#66ff66" }
+        { id: "Primo Principio", color: "#1f77b4", description: "Il primo principio della termodinamica è noto come il principio di conservazione dell'energia. Esso afferma che l'energia non può essere né creata né distrutta, ma solo trasformata da una forma all'altra." },
+        { id: "Secondo Principio", color: "#ff7f0e", description: "Il secondo principio della termodinamica introduce il concetto di entropia, indicando che in un sistema chiuso l'entropia tende ad aumentare, portando a un'irreversibilità dei processi naturali." },
+        { id: "Terzo Principio", color: "#2ca02c", description: "Il terzo principio della termodinamica afferma che man mano che la temperatura di un sistema si avvicina allo zero assoluto, l'entropia del sistema si avvicina a un valore costante." }
     ];
 
     const links = [
@@ -67,17 +68,18 @@
     const svg = d3.select("svg");
 
     const simulation = d3.forceSimulation(nodes)
-        .force("link", d3.forceLink(links).id(d => d.id).distance(150))
-        .force("charge", d3.forceManyBody().strength(-300))
-        .force("center", d3.forceCenter(width / 2, height / 2));
+        .force("link", d3.forceLink(links).id(d => d.id).distance(200))
+        .force("charge", d3.forceManyBody().strength(-400))
+        .force("center", d3.forceCenter(width / 2, height / 2))
+        .force("collision", d3.forceCollide().radius(50));
 
     const link = svg.append("g")
         .attr("class", "links")
         .selectAll("line")
         .data(links)
         .enter().append("line")
-        .attr("stroke-width", 3)
-        .attr("stroke", "#999");
+        .attr("stroke-width", 2)
+        .attr("stroke", "#bbb");
 
     const node = svg.append("g")
         .attr("class", "nodes")
@@ -85,29 +87,29 @@
         .data(nodes)
         .enter().append("g")
         .attr("class", "node")
+        .call(d3.drag()
+            .on("start", dragstarted)
+            .on("drag", dragged)
+            .on("end", dragended))
         .on("mouseover", function(event, d) {
             d3.select("#tooltip")
                 .style("left", (event.pageX + 10) + "px")
                 .style("top", (event.pageY - 10) + "px")
                 .style("display", "inline-block")
-                .html(d.id);
+                .html(`<strong>${d.id}</strong><br>${d.description}`);
         })
         .on("mouseout", function() {
             d3.select("#tooltip").style("display", "none");
-        })
-        .on("click", function(event, d) {
-            alert(`Hai cliccato su ${d.id}`);
         });
 
     node.append("circle")
-        .attr("r", 20)
+        .attr("r", 30)
         .attr("fill", d => d.color);
 
     node.append("text")
         .attr("dx", -30)
         .attr("dy", 5)
-        .text(d => d.id)
-        .attr("fill", "#333");
+        .text(d => d.id);
 
     simulation.on("tick", () => {
         link
@@ -119,8 +121,24 @@
         node
             .attr("transform", d => `translate(${d.x},${d.y})`);
     });
+
+    function dragstarted(event, d) {
+        if (!event.active) simulation.alphaTarget(0.3).restart();
+        d.fx = d.x;
+        d.fy = d.y;
+    }
+
+    function dragged(event, d) {
+        d.fx = event.x;
+        d.fy = event.y;
+    }
+
+    function dragended(event, d) {
+        if (!event.active) simulation.alphaTarget(0);
+        d.fx = null;
+        d.fy = null;
+    }
 </script>
 
 </body>
 </html>
-
