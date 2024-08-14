@@ -28,11 +28,17 @@
         .node circle {
             stroke: #333;
             stroke-width: 1.5px;
+            transition: r 0.3s ease, fill 0.3s ease;
         }
         .node text {
             font-size: 14px;
             font-weight: 600;
             fill: #555;
+            pointer-events: none;
+        }
+        .node:hover circle {
+            r: 35px;
+            fill: #ffcc00;
         }
         #tooltip {
             position: absolute;
@@ -85,7 +91,11 @@
         .data(links)
         .enter().append("line")
         .attr("stroke-width", 2)
-        .attr("stroke", "#bbb");
+        .attr("stroke", "#bbb")
+        .style("opacity", 0)  // Inizialmente nascosto
+        .transition()
+        .duration(1000)
+        .style("opacity", 1);  // Gradualmente visibile
 
     const node = svg.append("g")
         .attr("class", "nodes")
@@ -112,13 +122,20 @@
         });
 
     node.append("circle")
-        .attr("r", 30)
-        .attr("fill", d => d.color);
+        .attr("r", 0)  // Inizia con raggio 0
+        .attr("fill", d => d.color)
+        .transition()
+        .duration(1000)
+        .attr("r", 30);  // Espande a raggio 30
 
     node.append("text")
         .attr("dx", -30)
         .attr("dy", 5)
-        .text(d => d.id);
+        .text(d => d.id)
+        .style("opacity", 0)  // Inizialmente nascosto
+        .transition()
+        .duration(1000)
+        .style("opacity", 1);  // Gradualmente visibile
 
     simulation.on("tick", () => {
         link
