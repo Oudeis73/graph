@@ -1,62 +1,115 @@
-// Se la simulazione è già in esecuzione, fermala prima di riavviarla
-if (simulation) {
-    simulation.stop();
-}
+Certamente! Creerò un esempio di file HTML che utilizza Three.js per generare un grafo 3D rappresentante i tre principi della termodinamica. Ogni principio sarà rappresentato da un nodo, e li collegheremo con delle linee.
 
-// Configura la simulazione (qui, simula solo se non è già in esecuzione)
-simulation = d3.forceSimulation(nodes)
-    .force("link", d3.forceLink(links).id(d => d.id))
-    .force("charge", d3.forceManyBody().strength(-400))
-    .force("center", d3.forceCenter(width / 2, height / 2));
 
-// Seleziona gli elementi SVG, aggiornando le posizioni dei nodi e dei link
-const link = svg.selectAll(".link")
-    .data(links)
-    .enter().append("line")
-    .attr("class", "link")
-    .attr("stroke-width", 2)
-    .attr("stroke", "#999");
 
-const node = svg.selectAll(".node")
-    .data(nodes)
-    .enter().append("circle")
-    .attr("class", "node")
-    .attr("r", 10)
-    .attr("fill", "#69b3a2")
-    .call(d3.drag()
-        .on("start", dragstarted)
-        .on("drag", dragged)
-        .on("end", dragended));
+```html
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grafo 3D dei Principi della Termodinamica</title>
+    <style>
+        body { margin: 0; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // Inizializzazione della scena, camera e renderer
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
 
-// Aggiorna le posizioni della simulazione
-simulation.on("tick", () => {
-    link
-        .attr("x1", d => d.source.x)
-        .attr("y1", d => d.source.y)
-        .attr("x2", d => d.target.x)
-        .attr("y2", d => d.target.y);
+        // Creazione dei nodi (sfere)
+        const geometry = new THREE.SphereGeometry(0.5, 32, 32);
+        const material1 = new THREE.MeshBasicMaterial({color: 0xff0000}); // Rosso
+        const material2 = new THREE.MeshBasicMaterial({color: 0x00ff00}); // Verde
+        const material3 = new THREE.MeshBasicMaterial({color: 0x0000ff}); // Blu
 
-    node
-        .attr("cx", d => d.x)
-        .attr("cy", d => d.y);
-});
+        const node1 = new THREE.Mesh(geometry, material1);
+        const node2 = new THREE.Mesh(geometry, material2);
+        const node3 = new THREE.Mesh(geometry, material3);
 
-function dragstarted(event, d) {
-    if (!event.active) simulation.alphaTarget(0.3).restart();
-    d.fx = d.x;
-    d.fy = d.y;
-}
+        node1.position.set(-2, 0, 0);
+        node2.position.set(2, 0, 0);
+        node3.position.set(0, 2, 0);
 
-function dragged(event, d) {
-    d.fx = event.x;
-    d.fy = event.y;
-}
+        scene.add(node1);
+        scene.add(node2);
+        scene.add(node3);
 
-function dragended(event, d) {
-    if (!event.active) simulation.alphaTarget(0);
-    d.fx = null;
-    d.fy = null;
-}
+        // Creazione delle linee di collegamento
+        const lineMaterial = new THREE.LineBasicMaterial({color: 0xffffff});
+        
+        const points12 = [];
+        points12.push(node1.position);
+        points12.push(node2.position);
+        const geometry12 = new THREE.BufferGeometry().setFromPoints(points12);
+        const line12 = new THREE.Line(geometry12, lineMaterial);
 
-// Avvia la simulazione solo una volta
-simulation.restart();
+        const points23 = [];
+        points23.push(node2.position);
+        points23.push(node3.position);
+        const geometry23 = new THREE.BufferGeometry().setFromPoints(points23);
+        const line23 = new THREE.Line(geometry23, lineMaterial);
+
+        const points31 = [];
+        points31.push(node3.position);
+        points31.push(node1.position);
+        const geometry31 = new THREE.BufferGeometry().setFromPoints(points31);
+        const line31 = new THREE.Line(geometry31, lineMaterial);
+
+        scene.add(line12);
+        scene.add(line23);
+        scene.add(line31);
+
+        // Posizionamento della camera
+        camera.position.z = 5;
+
+        // Funzione di animazione
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Rotazione dei nodi
+            node1.rotation.x += 0.01;
+            node2.rotation.y += 0.01;
+            node3.rotation.z += 0.01;
+
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        // Gestione del ridimensionamento della finestra
+        window.addEventListener('resize', onWindowResize, false);
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+    </script>
+</body>
+</html>
+
+```
+
+Ho creato un file HTML che utilizza Three.js per generare un grafo 3D rappresentante i tre principi della termodinamica. Ecco una breve spiegazione del codice:
+
+1. Abbiamo tre sfere (nodi) che rappresentano i tre principi della termodinamica, ciascuna con un colore diverso.
+2. Le sfere sono collegate da linee bianche, formando un triangolo.
+3. I nodi ruotano lentamente su diversi assi per dare un effetto dinamico.
+4. La scena è renderizzata in modo responsivo, adattandosi alle dimensioni della finestra del browser.
+
+Per utilizzare questo codice:
+
+1. Copia l'intero contenuto dell'artifact in un nuovo file con estensione .html.
+2. Apri il file in un browser moderno.
+
+Vedrai un grafo 3D interattivo con tre nodi colorati (rosso, verde e blu) che rappresentano i tre principi della termodinamica, collegati da linee bianche.
+
+Se desideri personalizzare ulteriormente il grafo, ad esempio aggiungendo etichette ai nodi o modificando le posizioni, fammi sapere e sarò felice di aiutarti a modificare il codice.
