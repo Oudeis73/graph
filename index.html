@@ -7,20 +7,41 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
     <style>
         body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            font-family: Avenir, 'Helvetica Neue', Arial, sans-serif; 
             margin: 0; 
             padding: 0; 
-            background-color: #f0f0f0;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+        #container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+        }
+        #title {
+            font-size: 32px; /* Aumentato da 28px a 32px */
+            font-weight: bold;
+            color: #333;
+            text-align: center;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-family: Avenir, 'Helvetica Neue', Arial, sans-serif;
+            background-color: transparent;
+            text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.5);
         }
         #graph { 
-            width: 100vw; 
-            height: 100vh; 
-            background-color: #ffffff;
+            width: 100%;
+            height: calc(100% - 80px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         .node { cursor: pointer; }
         .link { 
-            stroke: #999; 
-            stroke-opacity: 0.6; 
+            stroke: #bbb;
+            stroke-opacity: 0.6;
             stroke-width: 2px;
         }
         .tooltip {
@@ -32,34 +53,39 @@
             pointer-events: none;
             opacity: 0;
             transition: opacity 0.3s;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            font-size: 14px;
+            font-size: 16px; /* Aumentato da 14px a 16px */
             max-width: 250px;
-        }
-        #title {
-            position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 24px;
-            font-weight: bold;
             color: #333;
-            text-align: center;
-            background-color: rgba(255, 255, 255, 0.8);
-            padding: 10px 20px;
-            border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        #background-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
         }
     </style>
 </head>
 <body>
-    <div id="title">I Principi della Termodinamica</div>
-    <div id="graph"></div>
+    <canvas id="background-canvas"></canvas>
+    <div id="container">
+        <div id="title">I Principi della Termodinamica</div>
+        <div id="graph"></div>
+    </div>
     <div class="tooltip"></div>
 
     <script>
+        // Colori più saturi per i principi
+        const colors = {
+            termodinamica: "#A67F7F",  // Bordeaux più saturo
+            primoPrincipio: "#7FA6A3", // Verde-acqua più saturo
+            secondoPrincipio: "#A67FA6", // Lavanda più saturo
+            terzoPrincipio: "#A6A37F"  // Beige più saturo
+        };
+
         const width = window.innerWidth;
-        const height = window.innerHeight;
+        const height = window.innerHeight - 80;
 
         const svg = d3.select("#graph")
             .append("svg")
@@ -67,11 +93,10 @@
             .attr("height", height);
 
         const simulation = d3.forceSimulation()
-            .force("link", d3.forceLink().id(d => d.id).distance(200))
+            .force("link", d3.forceLink().id(d => d.id).distance(150))
             .force("charge", d3.forceManyBody().strength(-1000))
             .force("center", d3.forceCenter(width / 2, height / 2));
 
-        // Dati statici
         const graph = {
             "nodes": [
                 {"id": 1, "name": "Termodinamica", "description": "Studio del calore e della temperatura e delle loro relazioni con l'energia e il lavoro", "url": "termodinamica.html"},
@@ -87,12 +112,14 @@
         };
 
         const link = svg.append("g")
+            .attr("class", "links")
             .selectAll("line")
             .data(graph.links)
             .enter().append("line")
             .attr("class", "link");
 
         const node = svg.append("g")
+            .attr("class", "nodes")
             .selectAll(".node")
             .data(graph.nodes)
             .enter().append("g")
@@ -104,18 +131,25 @@
 
         node.append("circle")
             .attr("r", d => d.id === 1 ? 40 : 30)
-            .attr("fill", d => d.id === 1 ? "#ff9900" : d3.schemeCategory10[d.id]);
+            .attr("fill", d => colors[Object.keys(colors)[d.id - 1]]);
 
         node.append("text")
             .attr("dy", ".35em")
             .attr("text-anchor", "middle")
             .text(d => d.name)
+            .style("font-family", "Avenir, 'Helvetica Neue', Arial, sans-serif")
             .style("font-weight", "bold")
-            .style("font-size", d => d.id === 1 ? "14px" : "12px");
+            .style("font-size", d => d.id === 1 ? "16px" : "14px") /* Aumentato da 14px/12px a 16px/14px */
+            .style("fill", "#333");
 
         const tooltip = d3.select(".tooltip");
 
         node.on("mouseover", function(event, d) {
+            d3.select(this).select("circle")
+                .transition()
+                .duration(300)
+                .attr("r", d => d.id === 1 ? 48 : 36);
+
             tooltip.transition()
                 .duration(200)
                 .style("opacity", .9);
@@ -123,7 +157,12 @@
                 .style("left", (event.pageX + 10) + "px")
                 .style("top", (event.pageY - 28) + "px");
         })
-        .on("mouseout", function() {
+        .on("mouseout", function(event, d) {
+            d3.select(this).select("circle")
+                .transition()
+                .duration(300)
+                .attr("r", d => d.id === 1 ? 40 : 30);
+
             tooltip.transition()
                 .duration(500)
                 .style("opacity", 0);
@@ -168,6 +207,58 @@
             d.fx = null;
             d.fy = null;
         }
+
+        // Nuovo effetto di sfondo più chiaro
+        const canvas = document.getElementById('background-canvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        function drawBackground() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            gradient.addColorStop(0, 'rgba(166, 127, 127, 0.05)');  // Bordeaux chiaro
+            gradient.addColorStop(0.33, 'rgba(127, 166, 163, 0.05)'); // Verde-acqua chiaro
+            gradient.addColorStop(0.66, 'rgba(166, 127, 166, 0.05)'); // Lavanda chiaro
+            gradient.addColorStop(1, 'rgba(166, 163, 127, 0.05)');  // Beige chiaro
+            
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Disegna alcune linee sottili
+            ctx.strokeStyle = 'rgba(200, 200, 200, 0.1)'; // Grigio molto chiaro
+            ctx.lineWidth = 1;
+
+            for (let i = 0; i < 20; i++) {
+                ctx.beginPath();
+                ctx.moveTo(Math.random() * canvas.width, 0);
+                ctx.lineTo(Math.random() * canvas.width, canvas.height);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(0, Math.random() * canvas.height);
+                ctx.lineTo(canvas.width, Math.random() * canvas.height);
+                ctx.stroke();
+            }
+        }
+
+        drawBackground();
+
+        // Gestione del ridimensionamento della finestra
+        window.addEventListener('resize', function() {
+            const width = window.innerWidth;
+            const height = window.innerHeight - 80;
+            
+            svg.attr("width", width).attr("height", height);
+            simulation.force("center", d3.forceCenter(width / 2, height / 2));
+            simulation.alpha(1).restart();
+
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            drawBackground();
+        });
     </script>
 </body>
 </html>
