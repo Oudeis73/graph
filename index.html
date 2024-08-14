@@ -1,1 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grafo dei Principi della Termodinamica</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        svg {
+            background-color: #ffffff;
+            border: 2px solid #333;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+        .node circle {
+            stroke: #333;
+            stroke-width: 2px;
+        }
+        .node text {
+            font-size: 14px;
+            font-weight: bold;
+        }
+        #tooltip {
+            position: absolute;
+            text-align: center;
+            width: auto;
+            padding: 8px;
+            font: 12px sans-serif;
+            background: lightsteelblue;
+            border: 0px;
+            border-radius: 8px;
+            pointer-events: none;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div id="tooltip"></div>
+
+<svg width="600" height="400"></svg>
+
+<script>
+    const width = 600;
+    const height = 400;
+
+    const nodes = [
+        { id: "Primo Principio", color: "#ff6666" },
+        { id: "Secondo Principio", color: "#66b3ff" },
+        { id: "Terzo Principio", color: "#66ff66" }
+    ];
+
+    const links = [
+        { source: "Primo Principio", target: "Secondo Principio" },
+        { source: "Secondo Principio", target: "Terzo Principio" }
+    ];
+
+    const svg = d3.select("svg");
+
+    const simulation = d3.forceSimulation(nodes)
+        .force("link", d3.forceLink(links).id(d => d.id).distance(150))
+        .force("charge", d3.forceManyBody().strength(-300))
+        .force("center", d3.forceCenter(width / 2, height / 2));
+
+    const link = svg.append("g")
+        .attr("class", "links")
+        .selectAll("line")
+        .data(links)
+        .enter().append("line")
+        .attr("stroke-width", 3)
+        .attr("stroke", "#999");
+
+    const node = svg.append("g")
+        .attr("class", "nodes")
+        .selectAll("g")
+        .data(nodes)
+        .enter().append("g")
+        .attr("class", "node")
+        .on("mouseover", function(event, d) {
+            d3.select("#tooltip")
+                .style("left", (event.pageX + 10) + "px")
+                .style("top", (event.pageY - 10) + "px")
+                .style("display", "inline-block")
+                .html(d.id);
+        })
+        .on("mouseout", function() {
+            d3.select("#tooltip").style("display", "none");
+        })
+        .on("click", function(event, d) {
+            alert(`Hai cliccato su ${d.id}`);
+        });
+
+    node.append("circle")
+        .attr("r", 20)
+        .attr("fill", d => d.color);
+
+    node.append("text")
+        .attr("dx", -30)
+        .attr("dy", 5)
+        .text(d => d.id)
+        .attr("fill", "#333");
+
+    simulation.on("tick", () => {
+        link
+            .attr("x1", d => d.source.x)
+            .attr("y1", d => d.source.y)
+            .attr("x2", d => d.target.x)
+            .attr("y2", d => d.target.y);
+
+        node
+            .attr("transform", d => `translate(${d.x},${d.y})`);
+    });
+</script>
+
+</body>
+</html>
 
