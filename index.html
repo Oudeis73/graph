@@ -1,115 +1,173 @@
-Certamente! Creerò un esempio di file HTML che utilizza Three.js per generare un grafo 3D rappresentante i tre principi della termodinamica. Ogni principio sarà rappresentato da un nodo, e li collegheremo con delle linee.
-
-
-
-```html
 <!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grafo 3D dei Principi della Termodinamica</title>
+    <title>Principi della Termodinamica - Grafo Interattivo</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
     <style>
-        body { margin: 0; }
-        canvas { display: block; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            background-color: #f0f0f0;
+        }
+        #graph { 
+            width: 100vw; 
+            height: 100vh; 
+            background-color: #ffffff;
+        }
+        .node { cursor: pointer; }
+        .link { 
+            stroke: #999; 
+            stroke-opacity: 0.6; 
+            stroke-width: 2px;
+        }
+        .tooltip {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.9);
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            font-size: 14px;
+            max-width: 250px;
+        }
+        #title {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            text-align: center;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 10px 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
     </style>
 </head>
 <body>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <div id="title">I Principi della Termodinamica</div>
+    <div id="graph"></div>
+    <div class="tooltip"></div>
+
     <script>
-        // Inizializzazione della scena, camera e renderer
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(renderer.domElement);
+        const width = window.innerWidth;
+        const height = window.innerHeight;
 
-        // Creazione dei nodi (sfere)
-        const geometry = new THREE.SphereGeometry(0.5, 32, 32);
-        const material1 = new THREE.MeshBasicMaterial({color: 0xff0000}); // Rosso
-        const material2 = new THREE.MeshBasicMaterial({color: 0x00ff00}); // Verde
-        const material3 = new THREE.MeshBasicMaterial({color: 0x0000ff}); // Blu
+        const svg = d3.select("#graph")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height);
 
-        const node1 = new THREE.Mesh(geometry, material1);
-        const node2 = new THREE.Mesh(geometry, material2);
-        const node3 = new THREE.Mesh(geometry, material3);
+        const simulation = d3.forceSimulation()
+            .force("link", d3.forceLink().id(d => d.id).distance(200))
+            .force("charge", d3.forceManyBody().strength(-1000))
+            .force("center", d3.forceCenter(width / 2, height / 2));
 
-        node1.position.set(-2, 0, 0);
-        node2.position.set(2, 0, 0);
-        node3.position.set(0, 2, 0);
+        // Dati statici
+        const graph = {
+            "nodes": [
+                {"id": 1, "name": "Termodinamica", "description": "Studio del calore e della temperatura e delle loro relazioni con l'energia e il lavoro", "url": "termodinamica.html"},
+                {"id": 2, "name": "Primo Principio", "description": "L'energia dell'universo è costante. L'energia non può essere creata né distrutta, ma solo trasformata da una forma all'altra.", "url": "primo_principio.html"},
+                {"id": 3, "name": "Secondo Principio", "description": "L'entropia dell'universo tende ad un massimo. In ogni processo spontaneo, l'entropia dell'universo aumenta.", "url": "secondo_principio.html"},
+                {"id": 4, "name": "Terzo Principio", "description": "L'entropia di un cristallo perfetto allo zero assoluto è nulla. È impossibile raggiungere lo zero assoluto con un numero finito di processi.", "url": "terzo_principio.html"}
+            ],
+            "links": [
+                {"source": 1, "target": 2},
+                {"source": 1, "target": 3},
+                {"source": 1, "target": 4}
+            ]
+        };
 
-        scene.add(node1);
-        scene.add(node2);
-        scene.add(node3);
+        const link = svg.append("g")
+            .selectAll("line")
+            .data(graph.links)
+            .enter().append("line")
+            .attr("class", "link");
 
-        // Creazione delle linee di collegamento
-        const lineMaterial = new THREE.LineBasicMaterial({color: 0xffffff});
-        
-        const points12 = [];
-        points12.push(node1.position);
-        points12.push(node2.position);
-        const geometry12 = new THREE.BufferGeometry().setFromPoints(points12);
-        const line12 = new THREE.Line(geometry12, lineMaterial);
+        const node = svg.append("g")
+            .selectAll(".node")
+            .data(graph.nodes)
+            .enter().append("g")
+            .attr("class", "node")
+            .call(d3.drag()
+                .on("start", dragstarted)
+                .on("drag", dragged)
+                .on("end", dragended));
 
-        const points23 = [];
-        points23.push(node2.position);
-        points23.push(node3.position);
-        const geometry23 = new THREE.BufferGeometry().setFromPoints(points23);
-        const line23 = new THREE.Line(geometry23, lineMaterial);
+        node.append("circle")
+            .attr("r", d => d.id === 1 ? 40 : 30)
+            .attr("fill", d => d.id === 1 ? "#ff9900" : d3.schemeCategory10[d.id]);
 
-        const points31 = [];
-        points31.push(node3.position);
-        points31.push(node1.position);
-        const geometry31 = new THREE.BufferGeometry().setFromPoints(points31);
-        const line31 = new THREE.Line(geometry31, lineMaterial);
+        node.append("text")
+            .attr("dy", ".35em")
+            .attr("text-anchor", "middle")
+            .text(d => d.name)
+            .style("font-weight", "bold")
+            .style("font-size", d => d.id === 1 ? "14px" : "12px");
 
-        scene.add(line12);
-        scene.add(line23);
-        scene.add(line31);
+        const tooltip = d3.select(".tooltip");
 
-        // Posizionamento della camera
-        camera.position.z = 5;
+        node.on("mouseover", function(event, d) {
+            tooltip.transition()
+                .duration(200)
+                .style("opacity", .9);
+            tooltip.html(d.description)
+                .style("left", (event.pageX + 10) + "px")
+                .style("top", (event.pageY - 28) + "px");
+        })
+        .on("mouseout", function() {
+            tooltip.transition()
+                .duration(500)
+                .style("opacity", 0);
+        })
+        .on("click", function(event, d) {
+            if (d.url) {
+                window.location.href = d.url;
+            }
+        });
 
-        // Funzione di animazione
-        function animate() {
-            requestAnimationFrame(animate);
+        simulation
+            .nodes(graph.nodes)
+            .on("tick", ticked);
 
-            // Rotazione dei nodi
-            node1.rotation.x += 0.01;
-            node2.rotation.y += 0.01;
-            node3.rotation.z += 0.01;
+        simulation.force("link")
+            .links(graph.links);
 
-            renderer.render(scene, camera);
+        function ticked() {
+            link
+                .attr("x1", d => d.source.x)
+                .attr("y1", d => d.source.y)
+                .attr("x2", d => d.target.x)
+                .attr("y2", d => d.target.y);
+
+            node
+                .attr("transform", d => `translate(${d.x},${d.y})`);
         }
 
-        animate();
+        function dragstarted(event, d) {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            d.fx = d.x;
+            d.fy = d.y;
+        }
 
-        // Gestione del ridimensionamento della finestra
-        window.addEventListener('resize', onWindowResize, false);
+        function dragged(event, d) {
+            d.fx = event.x;
+            d.fy = event.y;
+        }
 
-        function onWindowResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
+        function dragended(event, d) {
+            if (!event.active) simulation.alphaTarget(0);
+            d.fx = null;
+            d.fy = null;
         }
     </script>
 </body>
 </html>
-
-```
-
-Ho creato un file HTML che utilizza Three.js per generare un grafo 3D rappresentante i tre principi della termodinamica. Ecco una breve spiegazione del codice:
-
-1. Abbiamo tre sfere (nodi) che rappresentano i tre principi della termodinamica, ciascuna con un colore diverso.
-2. Le sfere sono collegate da linee bianche, formando un triangolo.
-3. I nodi ruotano lentamente su diversi assi per dare un effetto dinamico.
-4. La scena è renderizzata in modo responsivo, adattandosi alle dimensioni della finestra del browser.
-
-Per utilizzare questo codice:
-
-1. Copia l'intero contenuto dell'artifact in un nuovo file con estensione .html.
-2. Apri il file in un browser moderno.
-
-Vedrai un grafo 3D interattivo con tre nodi colorati (rosso, verde e blu) che rappresentano i tre principi della termodinamica, collegati da linee bianche.
-
-Se desideri personalizzare ulteriormente il grafo, ad esempio aggiungendo etichette ai nodi o modificando le posizioni, fammi sapere e sarò felice di aiutarti a modificare il codice.
