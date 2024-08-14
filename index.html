@@ -70,11 +70,7 @@ window.onload = function() {
     const height = 600;
 
     const svg = d3.select("svg");
-    if (!svg) {
-        console.error("SVG element not found!");
-        return;
-    }
-    console.log("SVG element found and selected.");
+    console.log("SVG element selected:", svg.node());
 
     const nodes = [
         { id: "Primo Principio", color: "#1f77b4", description: "\"L'energia non può essere né creata né distrutta.\""},
@@ -87,79 +83,82 @@ window.onload = function() {
         { source: "Secondo Principio", target: "Terzo Principio" }
     ];
 
-    try {
-        const simulation = d3.forceSimulation(nodes)
-            .force("link", d3.forceLink(links).id(d => d.id).distance(200))
-            .force("charge", d3.forceManyBody().strength(-400))
-            .force("center", d3.forceCenter(width / 2, height / 2))
-            .force("collision", d3.forceCollide().radius(50));
+    console.log("Nodes:", nodes);
+    console.log("Links:", links);
 
-        const link = svg.append("g")
-            .attr("class", "links")
-            .selectAll("line")
-            .data(links)
-            .enter().append("line")
-            .attr("stroke-width", 2)
-            .attr("stroke", "#bbb")
-            .style("opacity", 0)
-            .transition()
-            .duration(1000)
-            .style("opacity", 1);
+    const simulation = d3.forceSimulation(nodes)
+        .force("link", d3.forceLink(links).id(d => d.id).distance(200))
+        .force("charge", d3.forceManyBody().strength(-400))
+        .force("center", d3.forceCenter(width / 2, height / 2))
+        .force("collision", d3.forceCollide().radius(50));
 
-        const node = svg.append("g")
-            .attr("class", "nodes")
-            .selectAll("g")
-            .data(nodes)
-            .enter().append("g")
-            .attr("class", "node")
-            .call(d3.drag()
-                .on("start", dragstarted)
-                .on("drag", dragged)
-                .on("end", dragended))
-            .on("mouseover", function(event, d) {
-                d3.select("#tooltip")
-                    .style("left", (event.pageX + 10) + "px")
-                    .style("top", (event.pageY - 10) + "px")
-                    .style("display", "inline-block")
-                    .html(`<strong>${d.id}</strong><br>${d.description}`);
-            })
-            .on("mouseout", function() {
-                d3.select("#tooltip").style("display", "none");
-            })
-            .on("click", function(event, d) {
-                window.open(`pagina_${d.id.replace(' ', '_').toLowerCase()}.html`, '_blank');
-            });
+    const link = svg.append("g")
+        .attr("class", "links")
+        .selectAll("line")
+        .data(links)
+        .enter().append("line")
+        .attr("stroke-width", 2)
+        .attr("stroke", "#bbb")
+        .style("opacity", 0)
+        .transition()
+        .duration(1000)
+        .style("opacity", 1);
 
-        node.append("circle")
-            .attr("r", 0)
-            .attr("fill", d => d.color)
-            .transition()
-            .duration(1000)
-            .attr("r", 30);
+    console.log("Links appended to SVG.");
 
-        node.append("text")
-            .attr("dx", -30)
-            .attr("dy", 5)
-            .text(d => d.id)
-            .style("opacity", 0)
-            .transition()
-            .duration(1000)
-            .style("opacity", 1);
-
-        simulation.on("tick", () => {
-            link
-                .attr("x1", d => d.source.x)
-                .attr("y1", d => d.source.y)
-                .attr("x2", d => d.target.x)
-                .attr("y2", d => d.target.y);
-
-            node
-                .attr("transform", d => `translate(${d.x},${d.y})`);
+    const node = svg.append("g")
+        .attr("class", "nodes")
+        .selectAll("g")
+        .data(nodes)
+        .enter().append("g")
+        .attr("class", "node")
+        .call(d3.drag()
+            .on("start", dragstarted)
+            .on("drag", dragged)
+            .on("end", dragended))
+        .on("mouseover", function(event, d) {
+            d3.select("#tooltip")
+                .style("left", (event.pageX + 10) + "px")
+                .style("top", (event.pageY - 10) + "px")
+                .style("display", "inline-block")
+                .html(`<strong>${d.id}</strong><br>${d.description}`);
+        })
+        .on("mouseout", function() {
+            d3.select("#tooltip").style("display", "none");
+        })
+        .on("click", function(event, d) {
+            window.open(`pagina_${d.id.replace(' ', '_').toLowerCase()}.html`, '_blank');
         });
-        console.log("Simulation initialized and running.");
-    } catch (error) {
-        console.error("Error during D3 initialization:", error);
-    }
+
+    console.log("Nodes appended to SVG.");
+
+    node.append("circle")
+        .attr("r", 0)
+        .attr("fill", d => d.color)
+        .transition()
+        .duration(1000)
+        .attr("r", 30);
+
+    node.append("text")
+        .attr("dx", -30)
+        .attr("dy", 5)
+        .text(d => d.id)
+        .style("opacity", 0)
+        .transition()
+        .duration(1000)
+        .style("opacity", 1);
+
+    simulation.on("tick", () => {
+        link
+            .attr("x1", d => d.source.x)
+            .attr("y1", d => d.source.y)
+            .attr("x2", d => d.target.x)
+            .attr("y2", d => d.target.y);
+
+        node
+            .attr("transform", d => `translate(${d.x},${d.y})`);
+    });
+    console.log("Simulation started.");
 
     function dragstarted(event, d) {
         if (!event.active) simulation.alphaTarget(0.3).restart();
