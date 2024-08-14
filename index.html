@@ -63,6 +63,7 @@
 <svg width="800" height="600"></svg>
 
 <script>
+document.addEventListener("DOMContentLoaded", function() {
     const width = 800;
     const height = 600;
 
@@ -92,10 +93,10 @@
         .enter().append("line")
         .attr("stroke-width", 2)
         .attr("stroke", "#bbb")
-        .style("opacity", 0)  // Inizialmente nascosto
+        .style("opacity", 0)
         .transition()
         .duration(1000)
-        .style("opacity", 1);  // Gradualmente visibile
+        .style("opacity", 1);
 
     const node = svg.append("g")
         .attr("class", "nodes")
@@ -122,20 +123,20 @@
         });
 
     node.append("circle")
-        .attr("r", 0)  // Inizia con raggio 0
+        .attr("r", 0)
         .attr("fill", d => d.color)
         .transition()
         .duration(1000)
-        .attr("r", 30);  // Espande a raggio 30
+        .attr("r", 30);
 
     node.append("text")
         .attr("dx", -30)
         .attr("dy", 5)
         .text(d => d.id)
-        .style("opacity", 0)  // Inizialmente nascosto
+        .style("opacity", 0)
         .transition()
         .duration(1000)
-        .style("opacity", 1);  // Gradualmente visibile
+        .style("opacity", 1);
 
     simulation.on("tick", () => {
         link
@@ -164,6 +165,7 @@
         d.fx = null;
         d.fy = null;
     }
+});
 </script>
 
 </body>
