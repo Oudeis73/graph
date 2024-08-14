@@ -9,12 +9,16 @@
         body {
             font-family: 'Helvetica Neue', sans-serif;
             margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+            padding: 20px;
             background-color: #f4f4f4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            font-size: 2em;
+            color: #333;
+            margin-bottom: 20px;
         }
         svg {
             background-color: #ffffff;
@@ -46,6 +50,8 @@
 </head>
 <body>
 
+<h1>Grafo dei Principi della Termodinamica</h1>
+
 <div id="tooltip"></div>
 
 <svg width="800" height="600"></svg>
@@ -55,9 +61,9 @@
     const height = 600;
 
     const nodes = [
-        { id: "Primo Principio", color: "#1f77b4", description: "Il primo principio della termodinamica è noto come il principio di conservazione dell'energia. Esso afferma che l'energia non può essere né creata né distrutta, ma solo trasformata da una forma all'altra." },
-        { id: "Secondo Principio", color: "#ff7f0e", description: "Il secondo principio della termodinamica introduce il concetto di entropia, indicando che in un sistema chiuso l'entropia tende ad aumentare, portando a un'irreversibilità dei processi naturali." },
-        { id: "Terzo Principio", color: "#2ca02c", description: "Il terzo principio della termodinamica afferma che man mano che la temperatura di un sistema si avvicina allo zero assoluto, l'entropia del sistema si avvicina a un valore costante." }
+        { id: "Primo Principio", color: "#1f77b4", description: "\"L'energia non può essere né creata né distrutta.\""},
+        { id: "Secondo Principio", color: "#ff7f0e", description: "\"L'entropia di un sistema chiuso tende ad aumentare.\""},
+        { id: "Terzo Principio", color: "#2ca02c", description: "\"L'entropia si avvicina a un valore costante vicino allo zero assoluto.\""}
     ];
 
     const links = [
@@ -100,6 +106,9 @@
         })
         .on("mouseout", function() {
             d3.select("#tooltip").style("display", "none");
+        })
+        .on("click", function(event, d) {
+            window.open(`pagina_${d.id.replace(' ', '_').toLowerCase()}.html`, '_blank');
         });
 
     node.append("circle")
